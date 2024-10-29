@@ -287,11 +287,9 @@ where LAT_N is the northern latitude and LONG_W is the western longitude.
 
 **Solution**
 ```sql
-SELECT ROUND(
-            SQRT(
-                POW( (MAX(LAT_N) - MIN(LAT_N)), 2) + 
-                POW( (MAX(LONG_W) - MIN(LONG_W)), 2)
-            )
-        , 4)
-FROM STATION
+SELECT ROUND(LAT_N, 4) AS MEDIAN
+FROM STATION AS S
+WHERE 
+(SELECT COUNT(*) FROM STATION WHERE LAT_N > S.LAT_N) = (SELECT COUNT(*) FROM STATION WHERE LAT_N < S.LAT_N)
 ```
+SELECT (COUNT(CITY) - COUNT(DISTINCT CITY)) AS DIFF FROM STATION
