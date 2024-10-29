@@ -1,5 +1,5 @@
-# sql_basic_select
-solution for basic select question from hacker rank
+# sql_select
+solution for select question from hacker rank
 
 ###**https://www.hackerrank.com/challenges/weather-observation-station-12/**
 Query the list of CITY names from STATION that do not start with vowels and do not end with vowels. Your result cannot contain duplicates.
@@ -292,4 +292,18 @@ FROM STATION AS S
 WHERE 
 (SELECT COUNT(*) FROM STATION WHERE LAT_N > S.LAT_N) = (SELECT COUNT(*) FROM STATION WHERE LAT_N < S.LAT_N)
 ```
-SELECT (COUNT(CITY) - COUNT(DISTINCT CITY)) AS DIFF FROM STATION
+###**([https://www.hackerrank.com/challenges/the-pads/])
+
+Generate the following two result sets:
+
+-- Query an alphabetically ordered list of all names in OCCUPATIONS, immediately followed by the first letter of each profession as a parenthetical (i.e.: enclosed in parentheses). For example: AnActorName(A), ADoctorName(D), AProfessorName(P), and ASingerName(S).
+-- Query the number of ocurrences of each occupation in OCCUPATIONS. Sort the occurrences in ascending order, and output them in the following format: 
+
+-- There are total [occupation_count] [occupation]s.
+-- where [occupation_count] is the number of occurrences of an occupation in OCCUPATIONS and [occupation] is the lowercase occupation name. If more than one Occupation has the same [occupation_count], they should be ordered alphabetically.
+
+**Solution**
+```sql
+SELECT concat(NAME,'(',LEFT(OCCUPATION,1),')' )AS NAME_PROF FROM OCCUPATIONS ORDER BY NAME ASC ;
+SELECT CONCAT("There are a total of ",COUNT(OCCUPATION)," ",LOWER(OCCUPATION),"s.") AS COUNT_PROF FROM OCCUPATIONS GROUP BY OCCUPATION ORDER BY COUNT(OCCUPATION) ASC,LOWER(OCCUPATION) ASC ;
+```
