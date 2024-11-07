@@ -307,3 +307,145 @@ Generate the following two result sets:
 SELECT concat(NAME,'(',LEFT(OCCUPATION,1),')' )AS NAME_PROF FROM OCCUPATIONS ORDER BY NAME ASC ;
 SELECT CONCAT("There are a total of ",COUNT(OCCUPATION)," ",LOWER(OCCUPATION),"s.") AS COUNT_PROF FROM OCCUPATIONS GROUP BY OCCUPATION ORDER BY COUNT(OCCUPATION) ASC,LOWER(OCCUPATION) ASC ;
 ```
+
+###**([https://www.hackerrank.com/challenges/the-pads/])
+
+Pivot the Occupation column in OCCUPATIONS so that each Name is sorted alphabetically and displayed underneath its corresponding Occupation. The output column headers should be Doctor, Professor, Singer, and Actor, respectively.
+Note: Print NULL when there are no more names corresponding to an occupation..
+
+**Solution**
+```sql
+with occupation_order as ( select Occupation, Name, row_number() over(partition by Occupation order by Name) name_order from Occupations ) select MAX(case when Occupation = 'Doctor' then Name else NULL end) as Doctor, MAX(case when Occupation = 'Professor' then Name else NULL end) as Professor, MAX(case when Occupation = 'Singer' then Name else NULL end) as Singer, MAX(case when Occupation = 'Actor' then Name else NULL end) as Actor from occupation_order group by name_order order by name_order;
+```
+
+###**([(https://www.hackerrank.com/challenges/binary-search-tree-1/)])
+
+You are given a table, BST, containing two columns: N and P, where N represents the value of a node in Binary Tree, and P is the parent of N. Write a query to find the node type of Binary Tree ordered by the value of the node. Output one of the following for each node:
+Root: If node is root node.
+Leaf: If node is leaf node.
+Inner: If node is neither root nor leaf node.
+**Solution**
+```sql
+(SELECT n, 'Root' AS node_type 
+FROM bst 
+WHERE p IS NULL
+UNION 
+SELECT n, 'Inner' 
+FROM bst 
+WHERE n IN (SELECT DISTINCT p FROM bst) AND p is not null
+UNION 
+SELECT n, 'Leaf' 
+FROM bst 
+WHERE n NOT IN (select distinct p from bst where p is not null))
+ORDER BY n;
+```
+###**([(https://www.hackerrank.com/challenges/the-company/)])
+
+- Amber's conglomerate corporation just acquired some new companies. Each of the companies follows this hierarchy: 
+-- Given the table schemas below, write a query to print the company_code, founder name, total number of lead managers, total number of senior managers, total number of managers, and total number of employees. Order your output by ascending company_code.
+-- Note:
+-- The tables may contain duplicate records.
+-- The company_code is string, so the sorting should not be numeric. For example, if the company_codes are C_1, C_2, and C_10, then the ascending company_codes will be C_1, C_10, and C_2.
+
+**Solution**
+```sql
+SELECT C.company_code, founder, num_lm, num_sm, num_m, num_e
+FROM Company AS C
+JOIN (SELECT company_code, count(distinct lead_manager_code) AS num_lm
+     FROM Lead_Manager
+     GROUP BY company_code) AS LM ON C.company_code = LM.company_code
+JOIN (SELECT company_code, count(distinct senior_manager_code) AS num_sm
+     FROM Senior_Manager
+     GROUP BY company_code) AS SM ON C.company_code = SM.company_code
+JOIN (SELECT company_code, count(distinct manager_code) AS num_m
+     FROM Manager
+     GROUP BY company_code) AS M ON C.company_code = M.company_code
+JOIN (SELECT company_code, count(distinct employee_code) AS num_e
+     FROM Employee
+     GROUP BY company_code) AS E ON C.company_code = E.company_code
+ORDER BY C.company_code
+```
+
+###**([https://www.hackerrank.com/challenges/weather-observation-station-13/])
+PrepareSQLAggregationWeather Observation Station 13
+Query the sum of Northern Latitudes (LAT_N) from STATION having values greater than 38.7880 and less than 137.2345. Truncate your answer to  4 decimal places.
+
+**Solution**
+```sql
+SELECT ROUND(SUM(LAT_N), 4) FROM STATION WHERE LAT_N > 38.7880 AND LAT_N < 137.2345
+```
+
+###**([https://www.hackerrank.com/challenges/weather-observation-station-14/])
+PrepareSQLAggregationWeather Observation Station 14
+Query the greatest value of the Northern Latitudes (LAT_N) from STATION that is less than 137.2345 . Truncate your answer to 4 decimal places.
+
+**Solution**
+```sql
+SELECT ROUND(MAX(LAT_N), 4) FROM STATION WHERE LAT_N < 137.2345
+```
+
+###**([https://www.hackerrank.com/challenges/symmetric-pairs/problem])
+PrepareSQLAdvanced Join Symmetric Pairs
+-- You are given a table, Functions, containing two columns: X and Y. Y is the value of some function F at X -- i.e. Y = F(X).
+-- Two pairs (X1, Y1) and (X2, Y2) are said to be symmetric pairs if X1 = Y2 and X2 = Y1.
+-- Write a query to output all such symmetric pairs in ascending order by the value of X.
+
+**Solution**
+```sql
+SELECT Distinct A.X, A.Y
+FROM Functions AS A
+JOIN Functions AS B
+ON A.X = B.Y
+AND B.X = A.Y
+where A.X < A.Y
+
+union
+
+SELECT Distinct X, Y
+FROM Functions 
+where X = Y
+group by X, Y
+having count(*) > 1
+
+order by X
+```
+
+
+###**([(https://www.hackerrank.com/challenges/interviews/problem)])
+PrepareSQLAdvanced JoinInterviews
+
+Samantha interviews many candidates from different colleges using coding challenges and contests. Write a query to print the contest_id, hacker_id, name, and the sums of total_submissions, total_accepted_submissions, total_views, and total_unique_views for each contest sorted by contest_id. Exclude the contest from the result if all four sums are 0.
+-- Note: A specific contest can be used to screen candidates at more than one college, but each college only holds screening contest.
+
+**Solution**
+```sql
+SELECT CT.contest_id, CT.hacker_id, CT.name, SUM(TS), SUM(TAS), SUM(TV), SUM(TUV)
+FROM Contests AS CT
+JOIN Colleges AS CL ON CT.contest_id = CL.contest_id
+JOIN Challenges AS CH ON CH.college_id = CL.college_id
+left JOIN ( SELECT CHALLENGE_ID, SUM(total_views) AS TV, SUM(total_unique_views) AS TUV FROM View_Stats GROUP BY CHALLENGE_ID )  VS ON CH.challenge_id = VS.challenge_id
+left JOIN (SELECT CHALLENGE_ID, SUM(TOTAL_SUBMISSIONS) AS TS, SUM(TOTAL_ACCEPTED_SUBMISSIONS) AS TAS FROM Submission_Stats GROUP BY CHALLENGE_ID ) AS SS ON CH.challenge_id = SS.challenge_id
+GROUP BY CT.contest_id
+ORDER BY CT.contest_id
+```
+
+
+###**([(https://www.hackerrank.com/challenges/interviews/problem)])
+PrepareSQLAdvanced JoinInterviews
+
+Samantha interviews many candidates from different colleges using coding challenges and contests. Write a query to print the contest_id, hacker_id, name, and the sums of total_submissions, total_accepted_submissions, total_views, and total_unique_views for each contest sorted by contest_id. Exclude the contest from the result if all four sums are 0.
+-- Note: A specific contest can be used to screen candidates at more than one college, but each college only holds screening contest.
+
+**Solution**
+```sql
+SELECT CT.contest_id, CT.hacker_id, CT.name, SUM(TS), SUM(TAS), SUM(TV), SUM(TUV)
+FROM Contests AS CT
+JOIN Colleges AS CL ON CT.contest_id = CL.contest_id
+JOIN Challenges AS CH ON CH.college_id = CL.college_id
+left JOIN ( SELECT CHALLENGE_ID, SUM(total_views) AS TV, SUM(total_unique_views) AS TUV FROM View_Stats GROUP BY CHALLENGE_ID )  VS ON CH.challenge_id = VS.challenge_id
+left JOIN (SELECT CHALLENGE_ID, SUM(TOTAL_SUBMISSIONS) AS TS, SUM(TOTAL_ACCEPTED_SUBMISSIONS) AS TAS FROM Submission_Stats GROUP BY CHALLENGE_ID ) AS SS ON CH.challenge_id = SS.challenge_id
+GROUP BY CT.contest_id
+ORDER BY CT.contest_id
+```
+
+
