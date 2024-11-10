@@ -419,33 +419,82 @@ Samantha interviews many candidates from different colleges using coding challen
 
 **Solution**
 ```sql
-SELECT CT.contest_id, CT.hacker_id, CT.name, SUM(TS), SUM(TAS), SUM(TV), SUM(TUV)
-FROM Contests AS CT
-JOIN Colleges AS CL ON CT.contest_id = CL.contest_id
-JOIN Challenges AS CH ON CH.college_id = CL.college_id
-left JOIN ( SELECT CHALLENGE_ID, SUM(total_views) AS TV, SUM(total_unique_views) AS TUV FROM View_Stats GROUP BY CHALLENGE_ID )  VS ON CH.challenge_id = VS.challenge_id
-left JOIN (SELECT CHALLENGE_ID, SUM(TOTAL_SUBMISSIONS) AS TS, SUM(TOTAL_ACCEPTED_SUBMISSIONS) AS TAS FROM Submission_Stats GROUP BY CHALLENGE_ID ) AS SS ON CH.challenge_id = SS.challenge_id
-GROUP BY CT.contest_id
-ORDER BY CT.contest_id
+
+SELECT
+    con.contest_id,
+    con.hacker_id,
+    con.name,
+    SUM(s.total_submissions) as total_submissions,
+    SUM(s.total_accepted_submissions)  as total_accepted_submissions,
+    SUM(vs.total_views)  as total_views,
+    SUM(vs.total_unique_views) as total_unique_views
+FROM contests as con
+    LEFT JOIN colleges  as col
+        ON con.contest_id = col.contest_id
+    LEFT JOIN challenges  as ch
+        ON ch.college_id = col.college_id
+    LEFT JOIN (
+        SELECT
+            challenge_id,
+            SUM(total_submissions)  as total_submissions,
+            SUM(total_accepted_submissions) as total_accepted_submissions
+        FROM Submission_Stats
+        GROUP BY challenge_id
+    ) as s
+        ON s.challenge_id = ch.challenge_id
+    LEFT JOIN (
+        SELECT
+            challenge_id,
+            SUM(total_views) as total_views,
+            SUM(total_unique_views) as total_unique_views
+        FROM view_stats
+        GROUP BY challenge_id
+    ) as vs
+        ON vs.challenge_id = ch.challenge_id
+GROUP BY con.contest_id, con.hacker_id, con.name
+HAVING SUM(vs.total_views) + SUM(s.total_submissions) > 0
+ORDER BY con.contest_id
 ```
 
 
-###**([(https://www.hackerrank.com/challenges/interviews/problem)])
-PrepareSQLAdvanced JoinInterviews
+###**([https://www.hackerrank.com/challenges/15-days-of-learning-sql/problem])
+PrepareSQLAdvanced Join15 Days of Learning SQL
 
-Samantha interviews many candidates from different colleges using coding challenges and contests. Write a query to print the contest_id, hacker_id, name, and the sums of total_submissions, total_accepted_submissions, total_views, and total_unique_views for each contest sorted by contest_id. Exclude the contest from the result if all four sums are 0.
--- Note: A specific contest can be used to screen candidates at more than one college, but each college only holds screening contest.
+Julia conducted a  days of learning SQL contest. The start date of the contest was March 01, 2016 and the end date was March 15, 2016.
+Write a query to print total number of unique hackers who made at least  submission each day (starting on the first day of the contest), and find the hacker_id and name of the hacker who made maximum number of submissions each day. If more than one such hacker has a maximum number of submissions, print the lowest hacker_id. The query should print this information for each day of the contest, sorted by the date.
 
 **Solution**
 ```sql
-SELECT CT.contest_id, CT.hacker_id, CT.name, SUM(TS), SUM(TAS), SUM(TV), SUM(TUV)
-FROM Contests AS CT
-JOIN Colleges AS CL ON CT.contest_id = CL.contest_id
-JOIN Challenges AS CH ON CH.college_id = CL.college_id
-left JOIN ( SELECT CHALLENGE_ID, SUM(total_views) AS TV, SUM(total_unique_views) AS TUV FROM View_Stats GROUP BY CHALLENGE_ID )  VS ON CH.challenge_id = VS.challenge_id
-left JOIN (SELECT CHALLENGE_ID, SUM(TOTAL_SUBMISSIONS) AS TS, SUM(TOTAL_ACCEPTED_SUBMISSIONS) AS TAS FROM Submission_Stats GROUP BY CHALLENGE_ID ) AS SS ON CH.challenge_id = SS.challenge_id
-GROUP BY CT.contest_id
-ORDER BY CT.contest_id
+SELECT SUBMISSION_DATE,
+(SELECT COUNT(DISTINCT HACKER_ID)  
+ FROM SUBMISSIONS S2  
+ WHERE S2.SUBMISSION_DATE = S1.SUBMISSION_DATE AND    
+(SELECT COUNT(DISTINCT S3.SUBMISSION_DATE) 
+ FROM SUBMISSIONS S3 WHERE S3.HACKER_ID = S2.HACKER_ID AND S3.SUBMISSION_DATE < S1.SUBMISSION_DATE) = DATEDIFF(S1.SUBMISSION_DATE , '2016-03-01')),
+(SELECT HACKER_ID FROM SUBMISSIONS S2 WHERE S2.SUBMISSION_DATE = S1.SUBMISSION_DATE 
+GROUP BY HACKER_ID ORDER BY COUNT(SUBMISSION_ID) DESC, HACKER_ID LIMIT 1) AS TMP,
+(SELECT NAME FROM HACKERS WHERE HACKER_ID = TMP)
+FROM
+(SELECT DISTINCT SUBMISSION_DATE FROM SUBMISSIONS) S1
+GROUP BY SUBMISSION_DATE;
 ```
 
+###**([https://www.hackerrank.com/challenges/the-blunder/problem])
+PrepareSQLAggregationThe Blunder
+Samantha was tasked with calculating the average monthly salaries for all employees in the EMPLOYEES table, but did not realize her keyboard's key was broken until after completing the calculation. She wants your help finding the difference between her miscalculation (using salaries with any zeros removed), and the actual average salary.
+Write a query calculating the amount of error (i.e.:  average monthly salaries), and round it up to the next integer.
 
+**Solution**
+```sql
+select ceil(avg(salary)- avg(Replace(salary,'0',''))) from employees
+```
+
+###**([https://www.hackerrank.com/challenges/earnings-of-employees/problem])
+PrepareSQLAggregationTop Earners
+We define an employee's total earnings to be their monthly salary * months worked, and the maximum total earnings to be the maximum total earnings for any employee in the Employee table. Write a query to find the maximum total earnings for all employees as well as the total number of employees who have maximum total earnings. Then print these values as  space-separated integers.
+
+**Solution**
+```sql
+
+select max(salary * months), count(salary * months) from employee group by (salary * months) desc limit 1;
+```
