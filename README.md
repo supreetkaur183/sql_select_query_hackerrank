@@ -637,3 +637,30 @@ ON f.Friend_ID = p_fri.ID
 WHERE  p_fri.Salary > p_stu.Salary
 ORDER BY p_fri.Salary ASC
 ```
+
+###**([https://www.hackerrank.com/challenges/print-prime-numbers/problem])
+PrepareSQLAlternative QueriesPrint Prime Numbers
+Write a query to print all prime numbers less than or equal to . Print your result on a single line, and use the ampersand () character as your separator (instead of a space).
+
+**Solution**
+```sql
+WITH Numbers AS (
+    SELECT 2 AS num
+    UNION ALL
+    SELECT num + 1
+    FROM Numbers
+    WHERE num < 1001
+),
+Primes AS (
+    SELECT num
+    FROM Numbers
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM Numbers as n
+        WHERE n.num < Numbers.num AND Numbers.num % n.num = 0
+    )
+)
+SELECT STRING_AGG(num, '&') AS PrimeNumber
+FROM Primes
+OPTION (MAXRECURSION 1000)
+```
