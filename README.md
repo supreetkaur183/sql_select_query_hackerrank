@@ -498,3 +498,142 @@ We define an employee's total earnings to be their monthly salary * months worke
 
 select max(salary * months), count(salary * months) from employee group by (salary * months) desc limit 1;
 ```
+
+###**([https://www.hackerrank.com/challenges/the-report/problem])
+PrepareSQLBasic JoinThe Report
+You are given two tables: Students and Grades. Students contains three columns ID, Name and Marks. Ketty gives Eve a task to generate a report containing three columns: Name, Grade and Mark. Ketty doesn't want the NAMES of those students who received a grade lower than 8. The report must be in descending order by grade -- i.e. higher grades are entered first. If there is more than one student with the same grade (8-10) assigned to them, order those particular students by their name alphabetically. Finally, if the grade is lower than 8, use "NULL" as their name and list them by their grades in descending order. If there is more than one student with the same grade (1-7) assigned to them, order those particular students by their marks in ascending order.
+Write a query to help Eve
+
+**Solution**
+```sql
+select (case when g.grade >=8 then s.name else null end), g.grade, s.marks from students s join grades g on s.marks between g.min_mark and g.max_mark order by g.grade desc, s.name asc, s.marks asc
+```
+
+###**([https://www.hackerrank.com/challenges/full-score/problem])
+PrepareSQLBasic JoinTop Competitors
+Julia just finished conducting a coding contest, and she needs your help assembling the leaderboard! Write a query to print the respective hacker_id and name of hackers who achieved full scores for more than one challenge. Order your output in descending order by the total number of challenges in which the hacker earned a full score. If more than one hacker received full scores in same number of challenges, then sort them by ascending hacker_id.
+
+**Solution**
+```sql
+SELECT S.hacker_id, H.name FROM Hackers H left JOIN Submissions S ON S.hacker_id = H.hacker_id left JOIN Challenges CH ON S.challenge_id = CH.challenge_id left JOIN Difficulty D ON CH.difficulty_level = D.difficulty_level WHERE S.score = D.score
+GROUP BY S.hacker_id, H.name HAVING COUNT(DISTINCT S.challenge_id) > 1 ORDER BY count(s.hacker_id) DESC, S.hacker_id ASC
+```
+
+###**([https://www.hackerrank.com/challenges/harry-potter-and-wands/problem])
+PrepareSQLBasic JoinOllivander's Inventory
+Harry Potter and his friends are at Ollivander's with Ron, finally replacing Charlie's old broken wand.
+Hermione decides the best way to choose is by determining the minimum number of gold galleons needed to buy each non-evil wand of high power and age. Write a query to print the id, age, coins_needed, and power of the wands that Ron's interested in, sorted in order of descending power. If more than one wand has same power, sort the result in order of descending age.
+
+**Solution**
+```sql
+SELECT W.ID, P.AGE, W.COINS_NEEDED, W.POWER 
+FROM WANDS AS W
+JOIN WANDS_PROPERTY AS P
+ON (W.CODE = P.CODE) 
+WHERE P.IS_EVIL = 0 AND W.COINS_NEEDED = (SELECT MIN(COINS_NEEDED) 
+                                          FROM WANDS AS X
+                                          JOIN WANDS_PROPERTY AS Y 
+                                          ON (X.CODE = Y.CODE) 
+                                          WHERE X.POWER = W.POWER AND Y.AGE = P.AGE) 
+ORDER BY W.POWER DESC, P.AGE DESC;
+```
+
+###**([https://www.hackerrank.com/challenges/challenges/problem])
+PrepareSQLBasic JoinChallenges
+Julia asked her students to create some coding challenges. Write a query to print the hacker_id, name, and the total number of challenges created by each student. Sort your results by the total number of challenges in descending order. If more than one student created the same number of challenges, then sort the result by hacker_id. If more than one student created the same number of challenges and the count is less than the maximum number of challenges created, then exclude those students from the result.
+
+**Solution**
+```sql
+SELECT H.HACKER_ID, 
+       H.NAME, 
+       COUNT(C.CHALLENGE_ID) AS C_COUNT
+FROM HACKERS H
+JOIN CHALLENGES C ON C.HACKER_ID = H.HACKER_ID
+GROUP BY H.HACKER_ID, H.NAME
+HAVING C_COUNT = 
+    (SELECT COUNT(C2.CHALLENGE_ID) AS C_MAX
+     FROM CHALLENGES AS C2
+     GROUP BY C2.HACKER_ID 
+     ORDER BY C_MAX DESC LIMIT 1)
+OR C_COUNT IN 
+    (SELECT DISTINCT C_COMPARE AS C_UNIQUE
+     FROM (SELECT H2.HACKER_ID, 
+                  H2.NAME, 
+                  COUNT(CHALLENGE_ID) AS C_COMPARE
+           FROM HACKERS H2
+           JOIN CHALLENGES C ON C.HACKER_ID = H2.HACKER_ID
+           GROUP BY H2.HACKER_ID, H2.NAME) COUNTS
+     GROUP BY C_COMPARE
+     HAVING COUNT(C_COMPARE) = 1)
+ORDER BY C_COUNT DESC, H.HACKER_ID;
+/*
+OR
+*/
+WITH cte AS ( SELECT c.hacker_id, h.name, COUNT(c.challenge_id) AS cc 
+             FROM Challenges AS c 
+             JOIN Hackers AS h 
+             ON c.hacker_id = h.hacker_id 
+             GROUP BY c.hacker_id, h.name ) 
+SELECT hacker_id, name, cc 
+FROM cte 
+WHERE cc = (SELECT MAX(cc) FROM cte) 
+or cc in ( SELECT cc FROM cte 
+          GROUP BY cc 
+          HAVING COUNT(cc) = 1 ) 
+ORDER BY cc DESC, hacker_id;
+```
+###**([https://www.hackerrank.com/challenges/contest-leaderboard/problem])
+PrepareSQLBasic JoinContest Leaderboard
+You did such a great job helping Julia with her last coding contest challenge that she wants you to work on this one, too!
+The total score of a hacker is the sum of their maximum scores for all of the challenges. Write a query to print the hacker_id, name, and total score of the hackers ordered by the descending score. If more than one hacker achieved the same total score, then sort the result by ascending hacker_id. Exclude all hackers with a total score of  from your result.
+
+**Solution**
+```sql
+with cte1 as 
+    (select s.hacker_id, h.name, s.challenge_id, max(s.score) as scores 
+    from submissions  as s 
+    join hackers as h 
+    on h.hacker_id=s.hacker_id 
+    group by s.hacker_id,h.name, s.challenge_id ) 
+ select hacker_id, name, sum(scores) as sumscore 
+ from cte1 
+ group by hacker_id, name 
+ having sum(scores) > 0 
+ order by sumscore desc, hacker_id asc;
+```
+
+###**([https://www.hackerrank.com/challenges/sql-projects/problem])
+PrepareSQLAdvanced JoinSQL Project Planning
+You are given a table, Projects, containing three columns: Task_ID, Start_Date and End_Date. It is guaranteed that the difference between the End_Date and the Start_Date is equal to 1 day for each row in the table.If the End_Date of the tasks are consecutive, then they are part of the same project. Samantha is interested in finding the total number of different projects completed.
+Write a query to output the start and end dates of projects listed by the number of days it took to complete the project in ascending order. If there is more than one project that have the same number of completion days, then order by the start date of the project.
+
+**Solution**
+```sql
+WITH numbered_projects AS (
+                            SELECT start_date, end_date, 
+                            ROW_NUMBER() OVER (ORDER BY end_date) AS rn 
+                            FROM projects
+                           )
+SELECT MIN(start_date) AS pes, MAX(end_date) AS ped
+FROM numbered_projects
+GROUP BY DATE_SUB(end_date, INTERVAL rn DAY)
+ORDER BY (ped - pes);
+```
+
+###**([https://www.hackerrank.com/challenges/placements/problem])
+PrepareSQLAdvanced JoinPlacements
+You are given three tables: Students, Friends and Packages. Students contains two columns: ID and Name. Friends contains two columns: ID and Friend_ID (ID of the ONLY best friend). Packages contains two columns: ID and Salary (offered salary in $ thousands per month).Write a query to output the names of those students whose best friends got offered a higher salary than them. Names must be ordered by the salary amount offered to the best friends. It is guaranteed that no two students got same salary offer.
+
+**Solution**
+```sql
+SELECT s.Name
+FROM Students AS s
+LEFT JOIN Friends AS f 
+ON s.ID = f.ID
+LEFT JOIN Packages AS p_stu
+ON s.ID = p_stu.ID
+LEFT JOIN Packages AS p_fri
+ON f.Friend_ID = p_fri.ID
+WHERE  p_fri.Salary > p_stu.Salary
+ORDER BY p_fri.Salary ASC
+```
